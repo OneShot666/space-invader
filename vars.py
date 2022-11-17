@@ -1,7 +1,6 @@
 import pygame
 
 """                Variables du jeu                 """
-filename_musics = 'Musics'
 filename_images = 'images'
 filename_fonts = 'fonts'
 filename_sounds = 'sounds'
