@@ -1,5 +1,5 @@
 from rocket1 import *
-from variable import *
+from vars import *
 import pygame
 
 

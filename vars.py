@@ -2,9 +2,9 @@ import pygame
 
 """                Variables du jeu                 """
 filename_musics = 'Musics'
-filename_images = '../images'
-filename_fonts = '../fonts'
-filename_sounds = '../sounds'
+filename_images = 'images'
+filename_fonts = 'fonts'
+filename_sounds = 'sounds'
 
 game_name = 'Space Invader'
 pygame.display.set_caption(game_name, f'{filename_images}/icon.png')

@@ -1,4 +1,4 @@
-from variable import *
+from vars import *
 import random
 import pygame
 
