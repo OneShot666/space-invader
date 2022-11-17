@@ -17,15 +17,16 @@ class PlasmaShooter1(pygame.sprite.Sprite):
         self.rect.x = self.player.rect.x + self.player.width
         self.rect.y = (self.player.rect.y + self.player.height * 0.5) // 1
 
-    def move(self):                                                            # Fais bouger la rocket + gère le de-spawn
+    def move(self):                                                             # Move rocket + deal dispawn
         self.rect.x += self.speed
 
         for asteroid in self.player.game.check_collision(self, self.player.game.asteroid_group.asteroids):
+            self.player.game.sound_manager.play("explosion")
             self.auto_destruction()
             asteroid.take_damage(self.attack)
 
-        if self.rect.x > taille_fenetre[0]:
+        if self.rect.x > taille_fenetre[0]:                                     # if exit window from the right : dispawn
             self.auto_destruction()
 
-    def auto_destruction(self):                                                # Se détruis
+    def auto_destruction(self):                                                 # Auto-destruct itself
         self.player.rockets.remove(self)

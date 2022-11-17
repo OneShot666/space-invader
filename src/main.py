@@ -33,11 +33,11 @@ class Game:
 
     def start(self):
         print(f"Lancement du jeu {game_name} !")
-        ecran.blit(fond_ecran, (0, 0))
         if self.music_on:
-            self.sound_manager.play(self.song_name)
+            self.sound_manager.play(self.song_name, True)
 
         while self.game_in_progress:
+            ecran.blit(fond_ecran, (0, 0))
             self.inputs()
 
             if self.lvl1_in_progress:                                           # Niveau 1 en cours...
@@ -183,10 +183,11 @@ class Game:
 
     def mute_musics(self):
         self.music_on = not self.music_on
+        infinite = True if self.song_name == "background_music" else False
 
         if self.music_on:
             print(f"Musique activée : '{self.song_name}'")
-            self.sound_manager.play(self.song_name)
+            self.sound_manager.play(self.song_name, infinite)
         else:
             print(f"Musique désactivée : '{self.song_name}'")
             self.sound_manager.pause(self.song_name)
