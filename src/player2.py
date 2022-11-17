@@ -19,7 +19,7 @@ class Player2(pygame.sprite.Sprite):
         self.width = (taille_fenetre[0] * 0.1) // 1
         self.height = (self.width * 0.5) // 1
         self.bar_height = (self.height * 0.1) // 1
-        self.image = pygame.image.load('Images/spaceship2.png')
+        self.image = pygame.image.load('../images/spaceship2.png')
         self.image = pygame.transform.scale(self.image, (self.width, self.height))
         self.rect = self.image.get_rect()
         self.rect.x = self.width
