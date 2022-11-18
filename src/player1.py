@@ -1,6 +1,6 @@
+# import pygame
 from rocket1 import *
 from vars import *
-import pygame
 
 
 class Player1(pygame.sprite.Sprite):

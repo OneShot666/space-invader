@@ -1,14 +1,18 @@
+# import pygame
 from time import *
-from event_asteroids1 import *
-from player1 import *
-from rocket1 import *
-from sounds import *
+from player1 import Player1
+from rocket1 import PlasmaShooter1
+from event_asteroids1 import AsteroidGroup1
+from sounds import SoundManager
+from dialog import DialogBox
+from vars import *
 
 
-# ! Faire fonction message
-# ! Améliorer structure code + class asteroids & events
+# ! Faire fonction message (garder message move, etc ?) + fonction test pour print() avec args pour \t & \n
+# ! Améliorer class asteroids & events
 # ! Finir upgrade spaceships + asteroids
 # ! Ajouter musics (dossier d'Algieba)
+# ! Créer nb maximum asteroids
 class Game:
     def __init__(self):
         pygame.init()
@@ -29,6 +33,8 @@ class Game:
         self.score = 0
         self.sound_manager = SoundManager()
         self.song_name = "background_music"
+        self.dialogs_wait_list = []
+        self.dialog = DialogBox()
         self.start()
 
     def start(self):
@@ -37,7 +43,7 @@ class Game:
             self.sound_manager.play(self.song_name, True)
 
         while self.game_in_progress:
-            ecran.blit(fond_ecran, (0, 0))
+            ecran.blit(screen, (0, 0))
             self.inputs()
 
             if self.lvl1_in_progress:                                           # Niveau 1 en cours...

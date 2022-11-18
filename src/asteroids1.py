@@ -1,6 +1,6 @@
-from vars import *
+# import pygame
 import random
-import pygame
+from vars import *
 
 
 class Asteroid1(pygame.sprite.Sprite):
