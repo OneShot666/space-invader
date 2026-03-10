@@ -9,7 +9,7 @@ class PlasmaShooter1(pygame.sprite.Sprite):
         self.speed = 15
         self.cost = 5
         self.player = joueur
-        self.image = pygame.image.load(f"{filename_images}/rocket1.png")
+        self.image = pygame.image.load(f"{filename_images}/bullets/rocket1.png")
         self.width = self.player.width * 0.2
         self.image = pygame.transform.scale(self.image, (self.width, (self.width * 1/3) // 1))
         self.taille = self.image.get_size()

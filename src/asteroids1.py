@@ -17,7 +17,7 @@ class Asteroid1(pygame.sprite.Sprite):
         self.height = (self.width * 1) // 1
         self.ordonne = random.randint(0, 100)
         self.bar_height = 5
-        self.image = pygame.image.load(f'{filename_images}/asteroids1.png')
+        self.image = pygame.image.load(f'{filename_images}/comets/asteroids1.png')
         self.image = pygame.transform.scale(self.image, (self.width, self.height))
         self.taille = self.image.get_size()
         self.rect = self.image.get_rect()
