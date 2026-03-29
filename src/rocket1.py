@@ -1,5 +1,5 @@
+from src.vars import *
 # import pygame
-from vars import *
 
 
 class PlasmaShooter1(pygame.sprite.Sprite):

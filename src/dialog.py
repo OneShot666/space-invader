@@ -1,5 +1,5 @@
+from src.vars import *
 # import pygame.sprite
-from vars import *
 
 
 # ! Add list in game to deal with notification (max : 3, stay on screen for 5 sec, fade away : set_alpha)

@@ -1,6 +1,6 @@
-# import pygame
 from random import choice
-from vars import *
+from src.vars import *
+# import pygame
 
 
 class SoundManager:

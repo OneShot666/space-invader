@@ -1,5 +1,5 @@
+from src.asteroids1 import Asteroid1
 import pygame
-from asteroids1 import Asteroid1
 
 
 class AsteroidGroup1:

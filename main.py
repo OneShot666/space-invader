@@ -1,10 +1,10 @@
 from time import *
-from player1 import Player1
-from rocket1 import PlasmaShooter1
-from event_asteroids1 import AsteroidGroup1
-from sounds import SoundManager
-from dialog import DialogBox
-from vars import *
+from src.player1 import Player1
+from src.rocket1 import PlasmaShooter1
+from src.event_asteroids1 import AsteroidGroup1
+from src.sounds import SoundManager
+from src.dialog import DialogBox
+from src.vars import *
 import pygame
 
 

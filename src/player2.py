@@ -1,5 +1,5 @@
-from rocket2 import *
-from vars import *
+from src.rocket2 import *
+from src.vars import *
 import pygame
 
 
