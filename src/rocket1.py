@@ -21,7 +21,7 @@ class PlasmaShooter1(pygame.sprite.Sprite):
         self.rect.x += self.speed
 
         for asteroid in self.player.game.check_collision(self, self.player.game.asteroid_group.asteroids):
-            self.player.game.sound_manager.play("explosion")
+            self.player.game.sound_manager.play_sound("explosion")
             self.auto_destruction()
             asteroid.take_damage(self.attack)
 

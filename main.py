@@ -5,6 +5,7 @@ from src.event_asteroids1 import AsteroidGroup1
 from src.sounds import SoundManager
 from src.dialog import DialogBox
 from src.vars import *
+import asyncio
 import pygame
 
 
@@ -42,16 +43,18 @@ class Game:
         # Font & Music data
         self.font = pygame.font.Font(f"{filename_fonts}/CutiveMono-Regular.ttf", 50)
         self.sound_manager = SoundManager()
-        self.song_name = "background_music"
+        self.song_name = "bg_music"                                             # Sound category
         self.dialogs_wait_list = []
         self.dialog = DialogBox()
         # Function
-        self.Run()
+        # self.Run()
 
-    def Run(self):
+    async def Run(self):
+        await asyncio.sleep(0)
+
         print(f"Lancement du jeu {game_name} !")
         if self.music_on:
-            self.sound_manager.play(self.song_name, True)
+            self.sound_manager.play_music(self.song_name, True)
 
         while self.game_in_progress:
             ecran.blit(screen, (0, 0))
@@ -81,6 +84,8 @@ class Game:
             """
 
             pygame.display.flip()
+
+            await asyncio.sleep(0)
 
     def inputs(self):
         for event in pygame.event.get():
@@ -124,7 +129,7 @@ class Game:
 
     def menu(self, level=1):  # Gère le menu principal
         self.game_in_progress = True
-        self.sound_manager.play("launch")
+        self.sound_manager.play_sound("launch")
         print(f"Décollage ! (level {level})")
         sleep(2)
         if self.menu_in_progress:
@@ -204,7 +209,7 @@ class Game:
 
         if self.music_on:
             print(f"Musique activée : '{self.song_name}'")
-            self.sound_manager.play(self.song_name, infinite)
+            self.sound_manager.play_music(self.song_name, infinite)
         else:
             print(f"Musique désactivée : '{self.song_name}'")
             self.sound_manager.pause(self.song_name)
@@ -240,7 +245,7 @@ class Game:
             self.lvl2_in_progress = False
 
     def game_over(self):  # Réinitialise le jeu
-        self.sound_manager.play("game_over")
+        self.sound_manager.play_sound("game_over")
         self.joueur.health = self.joueur.health_max
         self.joueur.energy = self.joueur.energy_max
         self.joueur.xp = 0
@@ -257,7 +262,9 @@ class Game:
         quit()
 
 
-if __name__ == "__main__":
-    jeu = Game()
+async def start_game():
+    game = Game()
+    await game.Run()
 
-quit()
+if __name__ == "__main__":
+    asyncio.run(start_game())

@@ -88,5 +88,5 @@ class Player1(pygame.sprite.Sprite):
         self.rect.x += self.speed
 
     def shoot(self):                                                           # Attaque
-        self.game.sound_manager.play("shoot")
+        self.game.sound_manager.play_sound("shoot")
         self.rockets.add(PlasmaShooter1(self))

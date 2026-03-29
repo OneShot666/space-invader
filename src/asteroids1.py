@@ -44,7 +44,7 @@ class Asteroid1(pygame.sprite.Sprite):
         self.rect.x -= self.speed
 
         if self.player.game.check_collision(self, self.player.game.players):
-            self.player.game.sound_manager.play("explosion")
+            self.player.game.sound_manager.play_sound("explosion")
             self.auto_destruction()
             self.player.game.joueur.take_damage(self.attack)
             print(f"Vaisseau touché ! (-{self.attack}pv)")
