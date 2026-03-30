@@ -1,5 +1,6 @@
 from src.vars import SPACESHIP1_NAME, BULLET_NAME
 from src.bullet import PlasmaShooter
+from src.vars import FONT_NAME
 import pygame
 
 
@@ -7,53 +8,82 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, game):
         super().__init__()
         self.game = game
+        self.is_following = True
         # Stats data
         self.health =       200
         self.health_max =   200
-        self.energy =       0
+        self.energy =       50
         self.energy_max =   100
+        self.regen_amount = 0.2
+        self.speed =        5
         self.xp =           0
         self.xp_max =       100
-        self.speed =        10
-        self.regen_amount = 0.2
+        self.shoot_delay =  300                                                  # Ms between shoots
         # Image data
-        self.width = (game.screen_size[0] * 0.1) // 1
+        self.width =  (game.screen_size[0] * 0.1) // 1
         self.height = (self.width * 0.5) // 1
         self.bar_height = (self.height * 0.1) // 1
-        self.image =    pygame.image.load(SPACESHIP1_NAME).convert_alpha()
-        self.image =    pygame.transform.scale(self.image, (self.width, self.height))
+        self.original_image = pygame.image.load(SPACESHIP1_NAME).convert_alpha()
+        self.original_image = pygame.transform.scale(self.original_image, (self.width, self.height))
+        self.image =    self.original_image
         self.mask =     pygame.mask.from_surface(self.image)
         self.rect =     self.image.get_rect()
         self.rect.x =   self.width
         self.rect.y =   (game.screen_size[1] * 0.5 - self.height * 0.5) // 1
+        # Damage data
+        self.hurt_image = self.image.copy()
+        self.hurt_image.fill((255, 0, 0, 255), special_flags=pygame.BLEND_RGBA_MULT)
+        self.base_delay = 20
+        self.hit_delay = 0
+        self.last_hit_time = 0
         # Bullet data
+        self.last_shot = 0
         self.bullet_image = pygame.image.load(BULLET_NAME).convert_alpha()
-        self.Rockets = pygame.sprite.Group()
+        self.rocket = PlasmaShooter(self)                                       # Example of bullet
+        self.Bullets = pygame.sprite.Group()
+        # Warning data
+        self.warning_font = pygame.font.Font(FONT_NAME, 25)
+        self.warning_symbol = '!'
 
-    def update_bar(self, surface, current, maximum, color, max_color, coeff=1): # Any bar
-        pygame.draw.rect(surface, max_color, [self.rect.x, self.rect.y - coeff * self.bar_height,
-            self.width, self.bar_height])
-        pygame.draw.rect(surface, color, [self.rect.x, self.rect.y - coeff * self.bar_height,
-            current / maximum * self.width, self.bar_height])
+    def update_bar(self, surface, current, maximum, color, max_color, coeff=1, warning=False):  # Any bar
+        y = self.rect.y - coeff * self.bar_height
+        pygame.draw.rect(surface, max_color, [self.rect.x, y, self.width, self.bar_height])
+        pygame.draw.rect(surface, color, [self.rect.x, y, current / maximum * self.width, self.bar_height])
+
+        if warning and current < maximum * 0.2:
+            if (pygame.time.get_ticks() // 250) % 2:                            # Make text blink based on time
+                warning_text = self.warning_font.render(self.warning_symbol, True, color)
+                surface.blit(warning_text, (self.rect.x - 20, y - 12))
 
     def update_health_bar(self, surface):                                       # Barre de vie
-        self.update_bar(surface, self.health, self.health_max, (48, 225, 25), (30, 80, 30), 4)
-
-        if self.health < self.health_max * 0.1:
-            print("Attention Commandant, la coque est gravement touchée !")
+        self.update_bar(surface, self.health, self.health_max, (48, 225, 25), (30, 80, 30), 4, True)
 
     def update_energy_bar(self, surface):                                       # Barre d'énergie
-        self.update_bar(surface, self.energy, self.energy_max, (0, 205, 255), (0, 95, 245), 3)
+        self.update_bar(surface, self.energy, self.energy_max, (0, 205, 255), (0, 95, 245), 3, True)
 
     def update_xp_bar(self, surface):                                           # Barre d'xp
         self.update_bar(surface, self.xp, self.xp_max, (255, 215, 0), (120, 90, 0), 2)
 
+    def draw(self, screen, offset=(0, 0)):
+        self.update_flash()
+        for bullet in self.Bullets:
+            screen.blit(bullet.image, (bullet.rect.x + offset[0], bullet.rect.y + offset[1]))
+
     def hurt(self, amount):                                                     # Take damages
-        if self.health - amount > amount:
-            self.health -= amount
-            print(f"Damage taken ! ({amount})")
+        now = pygame.time.get_ticks()
+        if now - self.last_hit_time > self.hit_delay:
+            self.last_hit_time = now
+            self.hit_delay = amount * self.base_delay
+            if self.health - amount > amount:
+                self.health -= amount
+            else:
+                self.game.game_over()
+
+    def update_flash(self):
+        if pygame.time.get_ticks() - self.last_hit_time <= self.hit_delay:
+            self.image = self.hurt_image
         else:
-            self.game.game_over()
+            self.image = self.original_image
 
     def regen_energy(self, coeff=1):
         if self.energy + self.regen_amount <= self.energy_max:
@@ -72,8 +102,20 @@ class Player(pygame.sprite.Sprite):
         self.xp_max += 50
         self.health = self.health_max
         self.energy = self.energy_max
-        self.game.rocket.damage += 5
-        print("Level Up !")
+        self.rocket.damage += 5
+        print("Level Up !")                                                     # ! Play sound
+
+    def follow_mouse(self):
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        center_y = self.rect.centery                                            # Get player center
+        center_x = self.rect.centerx
+
+        if abs(center_y - mouse_y) > self.speed:                                # Fluid movement
+            if center_y < mouse_y: self.move_down()
+            else: self.move_up()
+        if abs(center_x - mouse_x) > self.speed:
+            if center_x < mouse_x: self.move_right()
+            else: self.move_left()
 
     def move_up(self):                                                         # Déplacements
         self.rect.y -= self.speed
@@ -88,5 +130,10 @@ class Player(pygame.sprite.Sprite):
         self.rect.x += self.speed
 
     def shoot(self):                                                           # Attaque
-        self.game.sound_manager.play_sound("shoot")
-        self.Rockets.add(PlasmaShooter(self, self.bullet_image))
+        now = pygame.time.get_ticks()
+        if now - self.last_shot > self.shoot_delay:
+            if self.rocket.cost <= self.energy:                                 # If can shoot
+                self.game.sound_manager.play_sound("shoot")
+                self.Bullets.add(PlasmaShooter(self, self.bullet_image))
+                self.energy -= self.rocket.cost
+                self.last_shot = now

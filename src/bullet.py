@@ -4,9 +4,10 @@ import pygame
 class PlasmaShooter(pygame.sprite.Sprite):
     def __init__(self, player, image=None):
         super().__init__()
+        self.level = 1
         self.damage = 15
         self.speed = 15
-        self.cost = 5
+        self.cost = 10
         self.player = player
         self.width = self.player.width * 0.2
         self.image = image
@@ -24,4 +25,4 @@ class PlasmaShooter(pygame.sprite.Sprite):
             self.auto_destruction()
 
     def auto_destruction(self):                                                 # Auto-destruct itself
-        self.player.Rockets.remove(self)
+        self.player.Bullets.remove(self)

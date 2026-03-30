@@ -1,5 +1,5 @@
+from random import randint
 from src.asteroid_belt import AsteroidBelt
-from src.bullet import PlasmaShooter
 from src.sounds import SoundManager
 from src.dialog import DialogBox
 from src.player import Player
@@ -8,22 +8,22 @@ import asyncio
 import pygame
 
 
-# [v0.0.6] . Add message box in game (all print content) + put score behind player & belt
-# [v0.0.7] ! Allow to hold SPACE pressed to shoot + mouse moving option + nb max of asteroids
-# [v0.0.8] ! Add levels + level manager + shield (right click -> cost energy)
-# [v0.0.9] L Add death screen + go back to main menu
+# [v0.0.6] Allow to left click to shoot + mouse moving option + nb max of asteroids
+# [v0.0.7] Add feedback + remove prints + put score behind player & belt
+# [v0.0.8] . Add levels + level manager + shield (right click -> cost energy)
+# [v0.0.9] ! Add death screen + go back to main menu
 # [v0.1.0] L Add upgrades for spaceship & asteroids
-# [v0.1.1] L Add balancing (speed, size, HP, etc)
 class Game:
     def __init__(self):
         pygame.init()
         # Project data
         self.name = "Space Invader"
         self.creator = "One Shot"
-        self.version = "v0.0.5"
+        self.version = "v0.0.7"
         self.birthday = "19/11/2022"
         # Bool data
-        self.game_in_progress = True
+        self.first_launch =     True
+        self.is_running =       True
         self.menu_in_progress = True
         self.lvl1_in_progress = False                                           # L Replace by current_level
         self.lvl2_in_progress = False
@@ -50,18 +50,21 @@ class Game:
         self.pressed = {}
         self.Players = pygame.sprite.Group()
         self.player = None
-        self.rocket = None
         # self.asteroids = pygame.sprite.Group()
         self.asteroid_belt = None
         self.score = 0
         # Font & Music data
-        self.font = None
+        self.score_font =   None
+        self.version_font = None
+        self.font_color = (96, 96, 192)
         self.sound_manager = None
         self.song_name = "bg_music"                                             # Sound category
         self.dialogs_wait_list = []
         self.dialog = None
-        # Function
-        # self.Run()
+        # Screenshake data
+        self.shake_duration = 0                                                 # In frames
+        self.shake_intensity = 0                                                # In pixels
+        self.offset = [0, 0]                                                    # Window offset
 
     def load_ressources(self):
         self.create_screen()
@@ -70,9 +73,9 @@ class Game:
         pygame.display.set_caption(game_name, ICON_NAME)                        # Set icon
         self.player = Player(self)
         self.Players.add(self.player)
-        self.rocket = PlasmaShooter(self.player)
         self.asteroid_belt = AsteroidBelt(self.screen_size, self.player)
-        self.font = pygame.font.Font(FONT_NAME, 50)
+        self.score_font =   pygame.font.Font(FONT_NAME, 50)
+        self.version_font = pygame.font.Font(FONT_NAME, 20)
         self.sound_manager = SoundManager()
         self.dialog = DialogBox()
 
@@ -107,12 +110,13 @@ class Game:
         self.load_ressources()
         await asyncio.sleep(0)
 
-        print(f"Launching {game_name} [{self.version}] !")
-        if self.music_on:
+        print(f"Launching {game_name} [{self.version}] !")                      # ! Add text
+        if self.first_launch and self.music_on:
             self.sound_manager.play_music(self.song_name, True)
 
-        while self.game_in_progress:
-            self.screen.blit(self.bg_image, (0, 0))
+        while self.is_running:
+            self.calculate_shake()
+            self.screen.blit(self.bg_image, self.offset)
             await self.inputs()
 
             if self.lvl1_in_progress:                                           # Levels in progress...
@@ -139,16 +143,16 @@ class Game:
     async def inputs(self):
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
-                self.pressed[event.key] = True  # Active les touches pressées
+                self.pressed[event.key] = True
 
-                if event.key == pygame.K_RETURN:  # Ouvre le menu (touche)
+                if event.key == pygame.K_RETURN:
                     await self.launch_level()
 
                 if event.key == pygame.K_ESCAPE:
                     self.close_game()                                           # L Replace by go to main menu
 
                 if event.key == pygame.K_m:                                     # Toggle music
-                    self.mute_musics()
+                    self.toggle_music()
 
             if event.type == pygame.KEYUP:                                      # Deactivate released keys
                 self.pressed[event.key] = False
@@ -156,29 +160,28 @@ class Game:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if self.play_button_rect.collidepoint(event.pos):
                     await self.launch_level()
-                    # game.sound_manager.play("background_music")
 
             if event.type == pygame.QUIT:
                 self.close_game()
 
     async def launch_level(self, level=1):                                      # Manage main menu
-        self.game_in_progress = True
-        self.sound_manager.play_sound("launch")
-        print(f"Launching to level {level} !")
-        await asyncio.sleep(2)
-
         if self.menu_in_progress:
+            self.sound_manager.play_sound("launch")
+            await asyncio.sleep(2)
+
+            if not self.first_launch and self.music_on:
+                self.sound_manager.play_music(self.song_name, True)
+
+            self.menu_in_progress = False
             if level == 1:
-                print("Loading level 1 : ")
                 self.lvl1_in_progress = True
             elif level == 2:
                 self.lvl2_in_progress = True
             elif level == 3:
                 self.lvl3_in_progress = True
             else:
-                print(f"AI : <error! level {level} doesn't exist>")
-                print("Welp, landing again then...")
-                self.menu_in_progress = False
+                self.menu_in_progress = True
+            self.first_launch = False
 
     def display_main_menu(self):
         self.banner_rect.x = (self.screen_size[0] * 0.5 - self.banner_size[0] * 0.5) // 1
@@ -189,55 +192,58 @@ class Game:
         self.screen.blit(self.play_button, self.play_button_rect)
 
     def update_game(self):                                                      # Display game screen
-        self.screen.blit(self.player.image, self.player.rect)
-
         self.player.regen_energy()
 
-        if self.pressed.get(pygame.K_UP) and self.player.rect.y > 0:            # Manage player movement
-            self.player.move_up()
-        elif self.pressed.get(pygame.K_DOWN) and self.player.rect.y + self.player.rect.height < self.screen_size[1]:
-            self.player.move_down()
+        if self.player.is_following:
+            self.player.follow_mouse()
+        else:
+            if self.pressed.get(pygame.K_UP) and self.player.rect.y > 0:            # Manage player movement
+                self.player.move_up()
+            elif self.pressed.get(pygame.K_DOWN) and self.player.rect.y + self.player.rect.height < self.screen_size[1]:
+                self.player.move_down()
 
-        if self.pressed.get(pygame.K_LEFT) and self.player.rect.x > 0:
-            self.player.move_left()
-        elif self.pressed.get(pygame.K_RIGHT) and self.player.rect.x + self.player.rect.width < self.screen_size[0]:
-            self.player.move_right()
+            if self.pressed.get(pygame.K_LEFT) and self.player.rect.x > 0:
+                self.player.move_left()
+            elif self.pressed.get(pygame.K_RIGHT) and self.player.rect.x + self.player.rect.width < self.screen_size[0]:
+                self.player.move_right()
 
-        if self.pressed.get(pygame.K_SPACE):
-            if self.rocket.cost <= self.player.energy:                          # If can shoot
-                self.player.energy -= self.rocket.cost
-                self.player.shoot()
-            else:
-                print("Not enough energy !")
+        if self.pressed.get(pygame.K_SPACE) or pygame.mouse.get_pressed()[0]:
+            self.player.shoot()
             self.pressed[pygame.K_SPACE] = False
 
-        score_text = self.font.render(f"Score : {int(self.score)}", True, (255, 255, 255))  # Draw score
-        self.screen.blit(score_text, (self.screen_size[0] * 0.5, self.screen_size[1] * 0.1))
-
-        for rocket in self.player.Rockets:                                      # Manage player's bullets
+        for rocket in self.player.Bullets:                                      # Manage player's bullets
             rocket.move()
 
         for asteroid in self.asteroid_belt.Asteroids:                           # Manage asteroids
             asteroid.fall()
-            asteroid.update_health_bar(self.screen)
+            asteroid.update_flash()
+            # asteroid.update_health_bar(self.screen)
 
-        bullets_hits = self.check_bullet_collisions()                           # Manage collision bullets-asteroid
+        bullets_hits = self.check_bullet_collisions()                           # Manage collisions bullets-asteroid
         for rocket in bullets_hits:
             for asteroid in bullets_hits[rocket]:
-                self.sound_manager.play_sound("explosion")
-                asteroid.take_damage(self.rocket.damage)
+                if asteroid.take_damage(self.player.rocket.damage):
+                    self.start_shake(int(5 * asteroid.random), int(4 * asteroid.random))
+                    self.sound_manager.play_sound("explosion")
 
         player_hits = self.check_collision(self.player, self.asteroid_belt.Asteroids, True)
-        for asteroid in player_hits:
+        for asteroid in player_hits:                                            # Manage collisions player-asteroids
             self.sound_manager.play_sound("explosion")
+            self.start_shake(int(15 * asteroid.random), int(12 * asteroid.random))
             self.player.hurt(asteroid.damage)
 
+        # Draw everything in order
+        version_text = self.version_font.render(f"{self.version}", True, self.font_color)
+        self.screen.blit(version_text, (self.screen_size[0] * 0.92 + self.offset[0], self.screen_size[1] * 0.95 + self.offset[1]))
+        score_text = self.score_font.render(f"S C O R E   {int(self.score)}", True, self.font_color)
+        self.screen.blit(score_text, (self.screen_size[0] * 0.55 + self.offset[0], self.screen_size[1] * 0.15 + self.offset[1]))
+        self.asteroid_belt.start_event()                                        # Create new asteroid
+        self.asteroid_belt.draw(self.screen, self.offset)
+        self.player.draw(self.screen, self.offset)
         self.player.update_health_bar(self.screen)
         self.player.update_energy_bar(self.screen)
         self.player.update_xp_bar(self.screen)
-        self.player.Rockets.draw(self.screen)
-        self.asteroid_belt.start_event()                                        # Create new asteroid
-        self.asteroid_belt.Asteroids.draw(self.screen)
+        self.screen.blit(self.player.image, (self.player.rect.x + self.offset[0], self.player.rect.y + self.offset[1]))
 
     def add_score(self, value=100):
         self.score += value
@@ -246,54 +252,58 @@ class Game:
             self.score = 0
 
     def check_bullet_collisions(self):
-        return pygame.sprite.groupcollide(self.player.Rockets, self.asteroid_belt.Asteroids,
+        return pygame.sprite.groupcollide(self.player.Bullets, self.asteroid_belt.Asteroids,
             True, False, collided=pygame.sprite.collide_mask)
 
     @staticmethod
     def check_collision(sprite, group, kill=False):                             # Check group collide with another group
         return pygame.sprite.spritecollide(sprite, group, kill, pygame.sprite.collide_mask)
 
-    def mute_musics(self):
+    def start_shake(self, duration=10, intensity=8):
+        self.shake_duration = duration
+        self.shake_intensity = intensity
+
+    def calculate_shake(self):
+        if self.shake_duration > 0:
+            self.offset[0] = randint(-self.shake_intensity, self.shake_intensity)
+            self.offset[1] = randint(-self.shake_intensity, self.shake_intensity)
+            self.shake_duration -= 1
+        else:
+            self.offset = [0, 0]                                                # Reset shake
+
+    def toggle_music(self):
         self.music_on = not self.music_on
         infinite = True if self.song_name == "bg_music" else False
 
         if self.music_on:
-            print(f"Music activated : '{self.song_name}'")
-            self.sound_manager.play_music(self.song_name, infinite)
+            self.sound_manager.play_music(self.song_name, infinite)             # L Add volume
         else:
-            print(f"Music deactivate : '{self.song_name}'")
-            self.sound_manager.pause(self.song_name)
+            self.sound_manager.pause()
 
     def go_to_menu(self):
-        self.game_in_progress = False
         self.menu_in_progress = True
         self.check_booleen()
+        self.sound_manager.pause()
 
     def check_booleen(self):
-        if self.game_in_progress:
-            self.menu_in_progress = False
+        if self.menu_in_progress:
             self.lvl1_in_progress = False
             self.lvl2_in_progress = False
             self.lvl3_in_progress = False
-        elif self.menu_in_progress:
-            self.game_in_progress = False
         elif self.lvl1_in_progress:
-            self.game_in_progress = False
             self.menu_in_progress = False
             self.lvl2_in_progress = False
             self.lvl3_in_progress = False
         elif self.lvl2_in_progress:
-            self.game_in_progress = False
             self.menu_in_progress = False
             self.lvl1_in_progress = False
             self.lvl3_in_progress = False
         elif self.lvl3_in_progress:
-            self.game_in_progress = False
             self.menu_in_progress = False
             self.lvl1_in_progress = False
             self.lvl2_in_progress = False
 
-    async def game_over(self):                                                  # Reset game
+    def game_over(self):                                                  # Reset game
         self.sound_manager.play_sound("game_over")
         self.player.health = self.player.health_max
         self.player.energy = self.player.energy_max
@@ -301,13 +311,11 @@ class Game:
         self.player.xp_max = 100
         self.asteroid_belt.Asteroids = pygame.sprite.Group()
         self.score = 0
-        print("You've been destroyed !")
-        await asyncio.sleep(1)
 
         self.go_to_menu()
 
     def close_game(self):
-        self.game_in_progress = False                                           # L Replace with death screen
+        self.is_running = False                                           # L Replace with death screen
 
 
 async def start_game():
