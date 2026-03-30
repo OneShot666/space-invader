@@ -16,14 +16,14 @@ class Player2(pygame.sprite.Sprite):
         self.attack = 100
         self.speed = 15
         self.regen_energy = 1.5
-        self.width = (taille_fenetre[0] * 0.1) // 1
+        self.width = (screen_size[0] * 0.1) // 1
         self.height = (self.width * 0.5) // 1
         self.bar_height = (self.height * 0.1) // 1
         self.image = pygame.image.load(f'{filename_images}/spaceships/spaceship2.png')
         self.image = pygame.transform.scale(self.image, (self.width, self.height))
         self.rect = self.image.get_rect()
         self.rect.x = self.width
-        self.rect.y = (taille_fenetre[1] * 0.5 - self.height * 0.5) // 1
+        self.rect.y = (screen_size[1] * 0.5 - self.height * 0.5) // 1
         self.rockets = pygame.sprite.Group()
 
     def update_health_bar(self, surface):                                      # Barre de vie
@@ -88,4 +88,5 @@ class Player2(pygame.sprite.Sprite):
         self.rect.x += self.speed
 
     def shoot(self):                                                           # Attaque
+        self.game.sound_manager.play_sound("shoot")
         self.rockets.add(PlasmaShooter2(self))

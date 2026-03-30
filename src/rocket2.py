@@ -24,7 +24,7 @@ class PlasmaShooter2(pygame.sprite.Sprite):
             self.auto_destruction()
             asteroid.take_damage(self.attack)
 
-        if self.rect.x > taille_fenetre[0]:
+        if self.rect.x > screen_size[0]:
             self.auto_destruction()
 
     def auto_destruction(self):                                                # Se détruis

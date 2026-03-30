@@ -20,4 +20,4 @@ class DialogBox(pygame.sprite.Sprite):
 
     def display(self, color=(255, 255, 255)):
         text = self.font.render(self.message, True, color)
-        ecran.blit(text, self.position)
+        screen.blit(text, self.position)
