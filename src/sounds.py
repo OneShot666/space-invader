@@ -1,8 +1,7 @@
-from random import choice
 from pathlib import Path
-from src.vars import *
-import pygame.mixer
-# import pygame
+from random import choice
+from src.vars import filename_sounds
+import pygame
 import os
 
 
@@ -27,12 +26,13 @@ class SoundManager:
     def create_list_song(*args):
         list_songs = []
         for index, name in enumerate(args):
-            if not (name.endswith(".mp3") or name.endswith(".ogg") or name.endswith(".wav") or "." in name):
-                name += ".ogg"
-                # name += ".wav"
-            song = Path(filename_sounds) / name
-            if os.path.exists(song):
-                list_songs.append(song)
+            song_name = Path(filename_sounds) / name
+            if os.path.exists(song_name):
+                if name.endswith(".ogg"):
+                    list_songs.append(song_name)
+                elif name.endswith(".wav"):
+                    song = pygame.mixer.Sound(song_name)
+                    list_songs.append(song)
         return list_songs
 
     def play_music(self, name, infinite=False):
@@ -43,9 +43,7 @@ class SoundManager:
         pygame.mixer.music.play(-1 if infinite else 0)
 
     def play_sound(self, name, infinite=False):
-        sound_name = choice(self.sounds[name])
-        print(sound_name)                                                       # !!!
-        sound = pygame.mixer.Sound(sound_name)
+        sound = choice(self.sounds[name])
         self.set_volume(self.sound_volume, sound)
         sound.play(-1 if infinite else 0)
 

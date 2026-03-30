@@ -1,5 +1,5 @@
+from src.vars import SPACESHIP1_NAME, BULLET_NAME
 from src.bullet import PlasmaShooter
-from src.vars import *
 import pygame
 
 
@@ -7,61 +7,61 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, game):
         super().__init__()
         self.game = game
-        self.health = 200
-        self.health_max = 200
-        self.energy = 0
-        self.energy_max = 100
-        self.xp = 0
-        self.xp_max = 100
-        self.attack = 50
-        self.speed = 10
-        self.regen_energy = 0.2
+        # Stats data
+        self.health =       200
+        self.health_max =   200
+        self.energy =       0
+        self.energy_max =   100
+        self.xp =           0
+        self.xp_max =       100
+        self.speed =        10
+        self.regen_amount = 0.2
+        # Image data
         self.width = (game.screen_size[0] * 0.1) // 1
         self.height = (self.width * 0.5) // 1
         self.bar_height = (self.height * 0.1) // 1
-        self.image = pygame.image.load(SPACESHIP1_NAME)
-        self.image = pygame.transform.scale(self.image, (self.width, self.height))
-        self.rect = self.image.get_rect()
-        self.rect.x = self.width
-        self.rect.y = (game.screen_size[1] * 0.5 - self.height * 0.5) // 1
-        self.rockets = pygame.sprite.Group()
+        self.image =    pygame.image.load(SPACESHIP1_NAME).convert_alpha()
+        self.image =    pygame.transform.scale(self.image, (self.width, self.height))
+        self.mask =     pygame.mask.from_surface(self.image)
+        self.rect =     self.image.get_rect()
+        self.rect.x =   self.width
+        self.rect.y =   (game.screen_size[1] * 0.5 - self.height * 0.5) // 1
+        # Bullet data
+        self.bullet_image = pygame.image.load(BULLET_NAME).convert_alpha()
+        self.Rockets = pygame.sprite.Group()
 
-    def update_health_bar(self, surface):                                      # Barre de vie
-        pygame.draw.rect(surface, (30, 80, 30), [self.rect.x, self.rect.y - 4 * self.bar_height,
-                                                 self.health_max / self.health_max * self.width, self.bar_height])
-        pygame.draw.rect(surface, (48, 225, 25), [self.rect.x, self.rect.y - 4 * self.bar_height,
-                                                  self.health / self.health_max * self.width, self.bar_height])
+    def update_bar(self, surface, current, maximum, color, max_color, coeff=1): # Any bar
+        pygame.draw.rect(surface, max_color, [self.rect.x, self.rect.y - coeff * self.bar_height,
+            self.width, self.bar_height])
+        pygame.draw.rect(surface, color, [self.rect.x, self.rect.y - coeff * self.bar_height,
+            current / maximum * self.width, self.bar_height])
+
+    def update_health_bar(self, surface):                                       # Barre de vie
+        self.update_bar(surface, self.health, self.health_max, (48, 225, 25), (30, 80, 30), 4)
 
         if self.health < self.health_max * 0.1:
-            print("Attention Commandant, l'armure est gravement touché !")
+            print("Attention Commandant, la coque est gravement touchée !")
 
-    def update_energy_bar(self, surface):                                      # Barre d'énergie
-        pygame.draw.rect(surface, (0, 95, 245), [self.rect.x, self.rect.y - 3 * self.bar_height,
-                                                 self.energy_max / self.energy_max * self.width, self.bar_height])
-        pygame.draw.rect(surface, (0, 205, 255), [self.rect.x, self.rect.y - 3 * self.bar_height,
-                                                  self.energy / self.energy_max * self.width, self.bar_height])
+    def update_energy_bar(self, surface):                                       # Barre d'énergie
+        self.update_bar(surface, self.energy, self.energy_max, (0, 205, 255), (0, 95, 245), 3)
 
-    def update_xp_bar(self, surface):                                          # Barre d'xp
-        pygame.draw.rect(surface, (120, 90, 0), [self.rect.x, self.rect.y - 2 * self.bar_height,
-                                                 self.xp_max / self.xp_max * self.width, self.bar_height])
-        pygame.draw.rect(surface, (255, 215, 0), [self.rect.x, self.rect.y - 2 * self.bar_height,
-                                                  self.xp / self.xp_max * self.width, self.bar_height])
+    def update_xp_bar(self, surface):                                           # Barre d'xp
+        self.update_bar(surface, self.xp, self.xp_max, (255, 215, 0), (120, 90, 0), 2)
 
-    def take_damage(self, amount):                                             # Prend des dégâts
+    def hurt(self, amount):                                                     # Take damages
         if self.health - amount > amount:
             self.health -= amount
-            print(f"Dégâts pris ! ({amount})")
+            print(f"Damage taken ! ({amount})")
         else:
             self.game.game_over()
 
-    def take_energy(self, amount):                                             # Récupère de l'énergie
-        if self.energy + amount <= self.energy_max:
-            self.energy += amount
+    def regen_energy(self, coeff=1):
+        if self.energy + self.regen_amount <= self.energy_max:
+            self.energy += self.regen_amount
         else:
             self.energy = self.energy_max
-            print("Energie max !")
 
-    def gain_experience(self, amount):                                         # Gagne de l'xp
+    def gain_experience(self, amount):
         self.xp += amount
 
         while self.xp > self.xp_max:
@@ -72,7 +72,7 @@ class Player(pygame.sprite.Sprite):
         self.xp_max += 50
         self.health = self.health_max
         self.energy = self.energy_max
-        self.game.rocket.attack += 1
+        self.game.rocket.damage += 5
         print("Level Up !")
 
     def move_up(self):                                                         # Déplacements
@@ -89,4 +89,4 @@ class Player(pygame.sprite.Sprite):
 
     def shoot(self):                                                           # Attaque
         self.game.sound_manager.play_sound("shoot")
-        self.rockets.add(PlasmaShooter(self))
+        self.Rockets.add(PlasmaShooter(self, self.bullet_image))

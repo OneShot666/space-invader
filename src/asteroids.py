@@ -20,6 +20,7 @@ class Asteroid(pygame.sprite.Sprite):
         self.bar_height = 5
         self.image = pygame.transform.scale(image, (self.width, self.height))
         self.image_size = self.image.get_size()
+        self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
         self.rect.x = screen_size[0] + randint(1, 5) * self.image_size[1]
         self.rect.y = screen_size[1] / 100 * randint(0, 100)
@@ -44,17 +45,10 @@ class Asteroid(pygame.sprite.Sprite):
     def fall(self):                                                             # Manage collisions + asteroids group + damage
         self.rect.x -= self.speed
 
-        if self.player.game.check_collision(self, self.player.game.Players):
-            self.player.game.sound_manager.play_sound("explosion")
-            self.auto_destruction()
-            self.player.take_damage(self.damage)
-            print(f"Vaisseau touché ! (-{self.damage}pv)")
-
         if self.rect.x + self.image_size[0] < 0:                                # Exit screen from the left
             self.auto_destruction()
             self.player.gain_experience(1)
             print("Ouf, on a évité un astéroide !")
 
     def auto_destruction(self):                                                 # Destroy self
-        self.player.game.asteroid_group.asteroids.remove(self)
-        del self
+        self.player.game.asteroid_belt.Asteroids.remove(self)
