@@ -2,7 +2,7 @@ name: Deploy Space Invader
 
 on:
   push:
-    branches: [ main ]
+    branches: [ web ]
 
 jobs:
   build-push:
@@ -22,8 +22,7 @@ jobs:
 
       - name: Build Web Version
         run: |
-          # --build : statics files
-          python -m pygbag --build .
+          python -m pygbag --no-preload --build $GITHUB_WORKSPACE/main.py
 
       - name: Deploy Space Invader to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
