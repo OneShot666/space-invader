@@ -3,6 +3,7 @@ from pathlib import Path
 from src.vars import *
 import pygame.mixer
 # import pygame
+import os
 
 
 class SoundManager:
@@ -18,7 +19,7 @@ class SoundManager:
             'shoot':        self.create_list_song("shooting_1.wav", "shooting_2.wav", "shooting_3.wav"),
             'game_over':    self.create_list_song("game_over_mario_version.wav"),
         }
-        self.music_volume = 0.2
+        self.music_volume = 0.1
         self.sound_volume = 0.1
         self.set_volume(amount)
 

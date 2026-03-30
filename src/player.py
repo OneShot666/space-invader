@@ -1,12 +1,12 @@
-from src.rocket1 import *
+from src.bullet import PlasmaShooter
 from src.vars import *
-# import pygame
+import pygame
 
 
-class Player1(pygame.sprite.Sprite):
-    def __init__(self, jeu):
+class Player(pygame.sprite.Sprite):
+    def __init__(self, game):
         super().__init__()
-        self.game = jeu
+        self.game = game
         self.health = 200
         self.health_max = 200
         self.energy = 0
@@ -15,15 +15,15 @@ class Player1(pygame.sprite.Sprite):
         self.xp_max = 100
         self.attack = 50
         self.speed = 10
-        self.regen_energy = 1
-        self.width = (screen_size[0] * 0.1) // 1
+        self.regen_energy = 0.2
+        self.width = (game.screen_size[0] * 0.1) // 1
         self.height = (self.width * 0.5) // 1
         self.bar_height = (self.height * 0.1) // 1
-        self.image = pygame.image.load(f'{filename_images}/spaceships/spaceship1.png')
+        self.image = pygame.image.load(SPACESHIP1_NAME)
         self.image = pygame.transform.scale(self.image, (self.width, self.height))
         self.rect = self.image.get_rect()
         self.rect.x = self.width
-        self.rect.y = (screen_size[1] * 0.5 - self.height * 0.5) // 1
+        self.rect.y = (game.screen_size[1] * 0.5 - self.height * 0.5) // 1
         self.rockets = pygame.sprite.Group()
 
     def update_health_bar(self, surface):                                      # Barre de vie
@@ -61,7 +61,7 @@ class Player1(pygame.sprite.Sprite):
             self.energy = self.energy_max
             print("Energie max !")
 
-    def take_experience(self, amount):                                         # Gagne de l'xp
+    def gain_experience(self, amount):                                         # Gagne de l'xp
         self.xp += amount
 
         while self.xp > self.xp_max:
@@ -89,4 +89,4 @@ class Player1(pygame.sprite.Sprite):
 
     def shoot(self):                                                           # Attaque
         self.game.sound_manager.play_sound("shoot")
-        self.rockets.add(PlasmaShooter1(self))
+        self.rockets.add(PlasmaShooter(self))

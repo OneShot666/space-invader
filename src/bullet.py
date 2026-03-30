@@ -1,15 +1,15 @@
 from src.vars import *
-# import pygame
+import pygame
 
 
-class PlasmaShooter1(pygame.sprite.Sprite):
-    def __init__(self, joueur):
+class PlasmaShooter(pygame.sprite.Sprite):
+    def __init__(self, player):
         super().__init__()
         self.attack = 10
         self.speed = 15
         self.cost = 5
-        self.player = joueur
-        self.image = pygame.image.load(f"{filename_images}/bullets/rocket1.png")
+        self.player = player
+        self.image = pygame.image.load(BULLET_NAME)
         self.width = self.player.width * 0.2
         self.image = pygame.transform.scale(self.image, (self.width, (self.width * 1/3) // 1))
         self.taille = self.image.get_size()
@@ -25,7 +25,7 @@ class PlasmaShooter1(pygame.sprite.Sprite):
             self.auto_destruction()
             asteroid.take_damage(self.attack)
 
-        if self.rect.x > screen_size[0]:                                     # if exit window from the right : dispawn
+        if self.rect.x > self.player.game.screen_size[0]:                       # if exit window from the right : dispawn
             self.auto_destruction()
 
     def auto_destruction(self):                                                 # Auto-destruct itself
