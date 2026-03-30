@@ -9,11 +9,11 @@ class SoundManager:
     def __init__(self, amount=0.2):
         pygame.mixer.init()
         self.musics = {                                                         # ogg files
-            'bg_music': self.create_list_song("background_music.ogg", "Cognitive Bias - This Other Space.ogg"),
+            'bg_music': self.create_list_song("background_music.ogg"),
             'ambiance': self.create_list_song("transfering_data.ogg", "in_a_spaceship.ogg"),
         }
         self.sounds = {                                                         # wav files
-            'launch':       self.create_list_song("launch_1.wav", "launch_2.wav", "launch_3.wav", "launch_4.wav"),
+            'launch':       self.create_list_song("launch_2.wav", "launch_4.wav"),
             'explosion':    self.create_list_song("explosion1.wav", "explosion2.wav"),
             'shoot':        self.create_list_song("shooting_1.wav", "shooting_2.wav", "shooting_3.wav"),
             'game_over':    self.create_list_song("game_over_mario_version.wav"),
@@ -30,7 +30,8 @@ class SoundManager:
                 name += ".ogg"
                 # name += ".wav"
             song = Path(filename_sounds) / name
-            list_songs.append(song)
+            if os.path.exists(song):
+                list_songs.append(song)
         return list_songs
 
     def play_music(self, name, infinite=False):
