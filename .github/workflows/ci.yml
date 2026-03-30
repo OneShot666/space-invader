@@ -20,9 +20,14 @@ jobs:
         run: |
           python -m pip install pygbag
 
+      - name: Installer FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
       - name: Build Web Version
         run: |
-          python -m pygbag --build --no_opt $GITHUB_WORKSPACE/main.py	# --cache $HOME/.cache/pygbag : to go faster
+          python -m pygbag --build --no_opt --disable-sound-format-error $GITHUB_WORKSPACE/main.py	# --cache $HOME/.cache/pygbag : to go faster
 
       - name: Deploy Space Invader to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
