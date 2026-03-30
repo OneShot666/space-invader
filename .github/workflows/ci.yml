@@ -22,7 +22,7 @@ jobs:
 
       - name: Build Web Version
         run: |
-          python -m pygbag --no-preload --build $GITHUB_WORKSPACE/main.py
+          python -m pygbag --build --no_opt $GITHUB_WORKSPACE/main.py	# --cache $HOME/.cache/pygbag : to go faster
 
       - name: Deploy Space Invader to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
