@@ -75,22 +75,24 @@ class Game:
         self.offset = [0, 0]                                                    # Window offset
 
     def load_ressources(self):
-        pygame.display.set_caption(self.name, ICON_NAME)                        # Set icon
         self.score_font =   pygame.font.Font(FONT_NAME, 50)
         self.version_font = pygame.font.Font(FONT_NAME, 20)
-        self.create_screen()
+        self.create_window()
         self.create_banner()
         self.create_buttons()
         self.create_level_cards()
         self.sound_manager = SoundManager()
         self.dialog = DialogBox()
 
-    def create_screen(self):
+    def create_window(self):
         bg_image = pygame.image.load(BG_IMAGE_NAME)
         self.bg_image = pygame.transform.scale(bg_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
         bg_image_size = self.bg_image.get_rect()
         self.screen_size = bg_image_size[2:4]
         self.screen = pygame.display.set_mode(self.screen_size, pygame.SCALED)
+        pygame.display.set_caption(self.name, ICON_NAME)                        # Set name
+        icon_image = pygame.image.load(ICON_NAME).convert_alpha()
+        pygame.display.set_icon(icon_image)                                     # Set icon
 
     def create_banner(self):                                                    # Game icon on main menu
         banner = pygame.image.load(BANNER_NAME)
