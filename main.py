@@ -32,6 +32,7 @@ class Game:
         self.is_music =         True
         # Game data
         if self.is_web:
+            pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SCALED)   # Get web resolution
             try:
                 from platform import window
                 window.canvas.oncontextmenu = lambda e: e.preventDefault()
@@ -219,10 +220,12 @@ class Game:
     def get_web_mouse_pos(self):
         mouse_x, mouse_y = pygame.mouse.get_pos()
         if self.is_web:
-            actual_w, actual_h = pygame.display.get_surface().get_size()
-            ratio_x = self.screen_size[0] / actual_w                            # Get ratio based on real screen size
-            ratio_y = self.screen_size[1] / actual_h
-            return mouse_x * ratio_x, mouse_y * ratio_y
+            surf = pygame.display.get_surface()
+            if surf is None: return mx, my
+            view_w, view_h = surf.get_size()
+            rx = self.screen_size[0] / view_w
+            ry = self.screen_size[1] / view_h
+            return mouse_x * rx, mouse_y * ry
         return mouse_x, mouse_y
 
     def display_select_menu(self):                                              # Display level selection screen
