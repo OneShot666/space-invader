@@ -35,7 +35,7 @@ class Game:
             pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SCALED)   # Get web resolution
             try:
                 from platform import window
-                window.canvas.oncontextmenu = lambda e: e.preventDefault()
+                window.eval("document.addEventListener('contextmenu', e => e.preventDefault());")
             except: pass
         self.current_level = None
         self.clock = pygame.time.Clock()

@@ -16,7 +16,7 @@ level_select_size = (SCREEN_WIDTH * 0.2, SCREEN_WIDTH * 0.1)
 FONT_NAME = f"{filename_fonts}/CutiveMono-Regular.ttf"
 
 # Images
-ICON_NAME =         f'{filename_images}/ui/icon.png'
+ICON_NAME =         f'{filename_images}/ui/icon.ico'
 BG_IMAGE_NAME =     f'{filename_images}/ui/background.png'
 BANNER_NAME =       f'{filename_images}/ui/icon.png'
 PLAY_BUTTON_NAME =  f'{filename_images}/ui/play_button.png'

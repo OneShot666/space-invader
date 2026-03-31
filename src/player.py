@@ -51,6 +51,18 @@ class Player(pygame.sprite.Sprite):
         # Warning data
         self.warning_font = pygame.font.Font(FONT_NAME, 30)
         self.warning_symbol = '!'
+        self.set_center()
+
+    def set_center(self):
+        raw_x, raw_y = pygame.mouse.get_pos()
+
+        try:
+            logic_x, logic_y = self.game.screen.get_rect().topleft
+            target_x = max(0, min(raw_x, self.game.screen_size[0]))
+            target_y = max(0, min(raw_y, self.game.screen_size[1]))
+            self.rect.center = (target_x, target_y)
+        except:
+            self.rect.center = (raw_x, raw_y)
 
     def update_bar(self, surface, current, maximum, color, max_color, coeff=1, warning=False):  # Any bar
         y = self.rect.y - coeff * self.bar_height
