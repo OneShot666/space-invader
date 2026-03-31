@@ -1,5 +1,5 @@
+from src.vars import SHIELD_NAME, FONT_NAME
 from src.bullet import PlasmaShooter
-from src.vars import FONT_NAME
 import pygame
 
 
@@ -10,6 +10,7 @@ class Player(pygame.sprite.Sprite):
         self.config = config
         self.bullet_config = bullet_config
         self.is_following = True
+        self.is_shielding = False
         # Stats data
         self.health =       config["health"]
         self.health_max =   config["health"]
@@ -37,13 +38,18 @@ class Player(pygame.sprite.Sprite):
         self.base_delay = 20
         self.hit_delay = 0
         self.last_hit_time = 0
+        # Shield data
+        self.shield_cost = 2
+        self.shield_image = pygame.image.load(SHIELD_NAME).convert_alpha()
+        self.shield_image = pygame.transform.scale(self.shield_image, (self.width * 2, self.height * 2))
+        self.shield_image.fill((255, 255, 255, 96), special_flags=pygame.BLEND_RGBA_MULT)
         # Bullet data
         self.last_shot = 0
         self.bullet_image = pygame.image.load(bullet_config["img"]).convert_alpha()
         self.rocket = PlasmaShooter(self, self.bullet_image, bullet_config)     # Example of bullet
         self.Bullets = pygame.sprite.Group()
         # Warning data
-        self.warning_font = pygame.font.Font(FONT_NAME, 25)
+        self.warning_font = pygame.font.Font(FONT_NAME, 30)
         self.warning_symbol = '!'
 
     def update_bar(self, surface, current, maximum, color, max_color, coeff=1, warning=False):  # Any bar
@@ -65,10 +71,31 @@ class Player(pygame.sprite.Sprite):
     def update_xp_bar(self, surface):                                           # Barre d'xp
         self.update_bar(surface, self.xp, self.xp_max, (255, 215, 0), (120, 90, 0), 2)
 
+    def update_flash(self):
+        if pygame.time.get_ticks() - self.last_hit_time <= self.hit_delay:
+            self.image = self.hurt_image
+        else:
+            self.image = self.original_image
+
     def draw(self, screen, offset=(0, 0)):
         self.update_flash()
+
         for bullet in self.Bullets:
             screen.blit(bullet.image, (bullet.rect.x + offset[0], bullet.rect.y + offset[1]))
+
+        self.update_health_bar(screen)
+        self.update_energy_bar(screen)
+        self.update_xp_bar(screen)
+
+        screen.blit(self.image, (self.rect.x + offset[0], self.rect.y + offset[1]))
+
+        if self.is_shielding:
+            self.energy -= self.shield_cost
+            screen.blit(self.shield_image, (int(self.rect.x - self.width * 0.5 + offset[0]),
+                int(self.rect.y - self.height * 0.5 + offset[1])))
+
+        if self.energy < self.shield_cost:
+            self.is_shielding = False
 
     def hurt(self, amount):                                                     # Take damages
         now = pygame.time.get_ticks()
@@ -79,12 +106,6 @@ class Player(pygame.sprite.Sprite):
                 self.health -= amount
             else:
                 self.game.game_over()
-
-    def update_flash(self):
-        if pygame.time.get_ticks() - self.last_hit_time <= self.hit_delay:
-            self.image = self.hurt_image
-        else:
-            self.image = self.original_image
 
     def regen_energy(self, coeff=1):
         if self.energy + self.regen_amount <= self.energy_max:
@@ -107,7 +128,7 @@ class Player(pygame.sprite.Sprite):
         print("Level Up !")                                                     # ! Play sound
 
     def follow_mouse(self):
-        mouse_x, mouse_y = pygame.mouse.get_pos()
+        mouse_x, mouse_y = self.game.get_web_mouse_pos()
         center_y = self.rect.centery                                            # Get player center
         center_x = self.rect.centerx
 
@@ -132,9 +153,13 @@ class Player(pygame.sprite.Sprite):
 
     def shoot(self):                                                           # Attaque
         now = pygame.time.get_ticks()
-        if now - self.last_shot > self.shoot_delay:
-            if self.rocket.cost <= self.energy:                                 # If can shoot
-                self.game.sound_manager.play_sound("shoot")
-                self.Bullets.add(PlasmaShooter(self, self.bullet_image, self.bullet_config))
-                self.energy -= self.rocket.cost
-                self.last_shot = now
+        if now - self.last_shot > self.shoot_delay and self.energy >= self.rocket.cost and not self.is_shielding:   # If can shoot
+            self.game.sound_manager.play_sound("shoot")
+            self.Bullets.add(PlasmaShooter(self, self.bullet_image, self.bullet_config))
+            self.energy -= self.rocket.cost
+            self.last_shot = now
+
+    def toggle_shield(self):
+        self.is_shielding = not self.is_shielding
+        if self.energy < self.shield_cost:
+            self.is_shielding = False

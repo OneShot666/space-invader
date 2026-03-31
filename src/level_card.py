@@ -25,7 +25,13 @@ class LevelCard:
         self.surface.blit(bullet_img, (width // 2 - 20, int(height * 0.55)))
         ast_img = pygame.image.load(config["asteroid"]["img"]).convert_alpha()
         ast_img = pygame.transform.scale(ast_img, (100, 100))
-        self.surface.blit(ast_img, (width // 2 - 50, int(height * 0.7)))
+        if config["comet"]:
+            self.surface.blit(ast_img, (int(width * 0.3 - 50), int(height * 0.7)))
+            cmt_img = pygame.image.load(config["comet"]["img"]).convert_alpha()
+            cmt_img = pygame.transform.scale(cmt_img, (100, 100))
+            self.surface.blit(cmt_img, (int(width * 0.7 - 50), int(height * 0.7)))
+        else:
+            self.surface.blit(ast_img, (int(width * 0.5 - 50), int(height * 0.7)))
 
     def draw(self, screen):
         screen.blit(self.surface, self.rect)

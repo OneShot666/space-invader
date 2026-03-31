@@ -5,9 +5,11 @@ import pygame
 
 
 class Asteroid(pygame.sprite.Sprite):
-    def __init__(self, screen_size, player: Player, image, config, chaos=0.25):
+    def __init__(self, screen_size, player: Player, image, config, chaos=0.25, is_comet=False):
         super().__init__()
+        self.is_comet = is_comet
         self.player = player
+        self.config = config
         # Attributes
         self.random =       uniform(0.5, 2.5)                                   # Random profile
         health = (self.random * uniform(config["hp_mult"][0], config["hp_mult"][1])) // 1
@@ -22,7 +24,7 @@ class Asteroid(pygame.sprite.Sprite):
         self.height = (self.width * 1) // 1
         self.bar_height = 5
         self.original_image = pygame.transform.scale(image, (self.width, self.height))
-        angle = randint(0, 360)
+        angle = 0 if is_comet else randint(0, 360)
         self.original_image = pygame.transform.rotate(self.original_image, angle)   # Random angle
         self.image = self.original_image
         self.image_size = self.image.get_size()
@@ -73,4 +75,7 @@ class Asteroid(pygame.sprite.Sprite):
             self.player.gain_experience(1)
 
     def auto_destruction(self):                                                 # Destroy self
-        self.player.game.asteroid_belt.Asteroids.remove(self)
+        if self.is_comet:
+            self.player.game.asteroid_belt.Comets.remove(self)
+        else:
+            self.player.game.asteroid_belt.Asteroids.remove(self)

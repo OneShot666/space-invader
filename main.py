@@ -7,28 +7,35 @@ from src.player import Player
 from src.vars import *
 import asyncio
 import pygame
+import sys
 
 
 # [v0.0.6] Allow to left click to shoot + mouse moving option + nb max of asteroids
 # [v0.0.7] Add feedback + remove prints + put score behind player & belt
 # [v0.0.8] Add levels + level screen + use all spaceships & bullets & asteroids
-# [v0.0.9] . Add shield (right click -> cost energy) + comets ?
-# [v0.1.0] ! Add retro mode + prepare for web
+# [v0.0.9] Add shield (right click -> cost energy) + comets + commands
+# [v0.1.0] . Add retro mode + prepare for web (mouse follow pb, close function)
 class Game:
     def __init__(self):
         pygame.init()
         # Project data
         self.name =     "Space Invader"
         self.creator =  "One Shot"
-        self.version =  "v0.0.8"
+        self.version =  "v0.0.9"
         self.birthday = "19/11/2022"
         # Bool data
+        self.is_web = sys.platform == "emscripten"
         self.first_launch =     True
         self.is_running =       True
         self.is_main_menu =     True
         self.is_selecting =     False
         self.is_music =         True
         # Game data
+        if self.is_web:
+            try:
+                from platform import window
+                window.canvas.oncontextmenu = lambda e: e.preventDefault()
+            except: pass
         self.current_level = None
         self.clock = pygame.time.Clock()
         self.fps = 60
@@ -169,6 +176,10 @@ class Game:
                 if event.key == pygame.K_m:                                     # Toggle music
                     self.toggle_music()
 
+                if self.current_level:
+                    if event.key == pygame.K_s or event.key == pygame.K_b:
+                        self.player.toggle_shield()
+
             if event.type == pygame.KEYUP:                                      # Deactivate released keys
                 self.pressed[event.key] = False
 
@@ -180,6 +191,9 @@ class Game:
                     if self.is_main_menu and self.play_button_rect.collidepoint(event.pos):
                         self.is_main_menu = False
                         self.is_selecting = True
+                if event.button == 3:
+                    if self.current_level:
+                        self.player.toggle_shield()
 
             if event.type == pygame.QUIT:
                 self.close_game()
@@ -187,7 +201,7 @@ class Game:
     async def launch_level(self, level=1):                                      # Manage main menu
         if self.is_selecting:
             self.sound_manager.play_sound("launch")
-            await asyncio.sleep(2)
+            await asyncio.sleep(0)
 
             if not self.first_launch and self.is_music:
                 self.sound_manager.play_music(self.song_name, True)
@@ -199,10 +213,20 @@ class Game:
             if self.current_level and self.current_level in LEVELS_DATA.keys():
                 level_config = LEVELS_DATA[self.current_level]
                 self.player = Player(self, level_config["player"], level_config["bullet"])
-                self.asteroid_belt = AsteroidBelt(self.screen_size, self.player, level_config["belt"], level_config["asteroid"])
+                self.asteroid_belt = AsteroidBelt(self.screen_size, self.player,
+                    level_config["belt"], level_config["asteroid"], level_config["comet"])
+
+    def get_web_mouse_pos(self):
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        if self.is_web:
+            actual_w, actual_h = pygame.display.get_surface().get_size()
+            ratio_x = self.screen_size[0] / actual_w                            # Get ratio based on real screen size
+            ratio_y = self.screen_size[1] / actual_h
+            return mouse_x * ratio_x, mouse_y * ratio_y
+        return mouse_x, mouse_y
 
     def display_select_menu(self):                                              # Display level selection screen
-        pos = pygame.mouse.get_pos()
+        pos = self.get_web_mouse_pos()
         for card in self.LevelCards:
             if card.rect.collidepoint(pos):  # If mouse hover card
                 pygame.draw.rect(self.screen, (255, 255, 255), card.rect, 3, border_radius=15)
@@ -252,6 +276,11 @@ class Game:
             asteroid.update_flash()
             # asteroid.update_health_bar(self.screen)                           # Hide for better immersion
 
+        for comet in self.asteroid_belt.Comets:                                 # Manage comets
+            comet.fall()
+            comet.update_flash()
+            # comet.update_health_bar(self.screen)                              # Hide for better immersion
+
         bullets_hits = self.check_bullet_collisions()                           # Manage collisions bullets-asteroid
         for rocket in bullets_hits:
             for asteroid in bullets_hits[rocket]:
@@ -260,30 +289,40 @@ class Game:
                     self.sound_manager.play_sound("explosion")
 
         player_hits = self.check_collision(self.player, self.asteroid_belt.Asteroids, True)
-        for asteroid in player_hits:                                            # Manage collisions player-asteroids
-            self.sound_manager.play_sound("explosion")
-            self.start_shake(int(15 * asteroid.random), int(12 * asteroid.random))
-            self.player.hurt(asteroid.damage)
+        for asteroid in player_hits:                                        # Manage collisions player-asteroids
+            if not self.player.is_shielding:
+                self.sound_manager.play_sound("explosion")
+                self.start_shake(int(15 * asteroid.random), int(12 * asteroid.random))
+                self.player.hurt(asteroid.damage)
+        comets_hits = self.check_collision(self.player, self.asteroid_belt.Comets, True)
+        for comet in comets_hits:                                           # Manage collisions player-comets
+            if not self.player.is_shielding:
+                self.sound_manager.play_sound("explosion")
+                self.start_shake(int(15 * comet.random), int(12 * comet.random))
+                self.player.hurt(comet.damage)
 
         # Draw everything in order
         version_text = self.version_font.render(f"{self.version}", True, self.font_color)
         self.screen.blit(version_text, (self.screen_size[0] * 0.92 + self.offset[0], self.screen_size[1] * 0.95 + self.offset[1]))
+        commands = f"[Left click / Space] Shoot\n[Right click / S / B] Shield\n[Mouse] Move"
+        command_text = self.version_font.render(commands, True, self.font_color)
+        self.screen.blit(command_text, (self.screen_size[0] * 0.01 + self.offset[0], self.screen_size[1] * 0.89 + self.offset[1]))
         score_text = self.score_font.render(f"S C O R E   {int(self.score)}", True, self.font_color)
         self.screen.blit(score_text, (self.screen_size[0] * 0.55 + self.offset[0], self.screen_size[1] * 0.15 + self.offset[1]))
         self.asteroid_belt.start_event()                                        # Create new asteroid
         self.asteroid_belt.draw(self.screen, self.offset)
         self.player.draw(self.screen, self.offset)
-        self.player.update_health_bar(self.screen)
-        self.player.update_energy_bar(self.screen)
-        self.player.update_xp_bar(self.screen)
-        self.screen.blit(self.player.image, (self.player.rect.x + self.offset[0], self.player.rect.y + self.offset[1]))
 
     def add_score(self, value=0):
         self.score = max(self.score + value, 0)
 
     def check_bullet_collisions(self):
-        return pygame.sprite.groupcollide(self.player.Bullets, self.asteroid_belt.Asteroids,
+        ast_hits = pygame.sprite.groupcollide(self.player.Bullets, self.asteroid_belt.Asteroids,
             True, False, collided=pygame.sprite.collide_mask)
+        cmt_hits = pygame.sprite.groupcollide(self.player.Bullets, self.asteroid_belt.Comets,
+            True, False, collided=pygame.sprite.collide_mask)
+        ast_hits.update(cmt_hits)
+        return ast_hits
 
     @staticmethod
     def check_collision(sprite, group, kill=False):                             # Check group collide with another group
