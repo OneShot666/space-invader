@@ -5,17 +5,18 @@ import pygame
 
 
 class Asteroid(pygame.sprite.Sprite):
-    def __init__(self, screen_size, player: Player, image):
+    def __init__(self, screen_size, player: Player, image, config, chaos=0.25):
         super().__init__()
         self.player = player
         # Attributes
         self.random =       uniform(0.5, 2.5)                                   # Random profile
-        self.health =       (self.random * 50) // 1
-        self.health_max =   (self.random * 50) // 1
-        self.damage =       self.random * 20 // 1
-        self.speed =        uniform(1, 5)
-        self.gap =          uniform(0, 0.25) * choice([-1, 1])
-        self.xp =           (self.health_max / 10) // 1
+        health = (self.random * uniform(config["hp_mult"][0], config["hp_mult"][1])) // 1
+        self.health =       health
+        self.health_max =   health
+        self.damage =       (health * 0.5) // 1
+        self.speed =        uniform(config["speed_range"][0], config["speed_range"][1])
+        self.gap =          uniform(0, chaos) * choice([-1, 1])
+        self.xp =           (health * 0.1) // 1
         # Image data
         self.width = (self.random * screen_size[0] * 0.05) // 1
         self.height = (self.width * 1) // 1

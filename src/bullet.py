@@ -2,19 +2,19 @@ import pygame
 
 
 class PlasmaShooter(pygame.sprite.Sprite):
-    def __init__(self, player, image=None):
+    def __init__(self, player, image, config):
         super().__init__()
         self.level = 1
-        self.damage = 15
-        self.speed = 15
-        self.cost = 10
-        self.player = player
-        self.width = self.player.width * 0.2
-        self.image = image
-        self.image = pygame.transform.scale(self.image, (self.width, (self.width * 1/3) // 1)) if image else None
+        self.damage =   config["damage"]
+        self.speed =    config["speed"]
+        self.cost =     config["cost"]
+        self.player =   player
+        self.width =    self.player.width * 0.2
+        self.image =    image
+        self.image = pygame.transform.scale(self.image, (self.width, (self.width * 1/3) // 1))
         # self.mask = pygame.mask.from_surface(self.image)                      # Not optimized -> rect is enough
-        self.size = self.image.get_size() if image else (1, 1)
-        self.rect = self.image.get_rect() if image else pygame.Rect(0, 0, 1, 1)
+        self.size = self.image.get_size()
+        self.rect = self.image.get_rect()
         self.rect.x = self.player.rect.x + self.player.width
         self.rect.y = (self.player.rect.y + self.player.height * 0.5) // 1
 

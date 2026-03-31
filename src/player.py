@@ -1,29 +1,30 @@
-from src.vars import SPACESHIP1_NAME, BULLET_NAME
 from src.bullet import PlasmaShooter
 from src.vars import FONT_NAME
 import pygame
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, game):
+    def __init__(self, game, config, bullet_config):
         super().__init__()
         self.game = game
+        self.config = config
+        self.bullet_config = bullet_config
         self.is_following = True
         # Stats data
-        self.health =       200
-        self.health_max =   200
-        self.energy =       50
-        self.energy_max =   100
-        self.regen_amount = 0.2
-        self.speed =        5
+        self.health =       config["health"]
+        self.health_max =   config["health"]
+        self.energy =       config["energy"]
+        self.energy_max =   config["energy"]
+        self.regen_amount = config["regen"]
+        self.speed =        config["speed"]
         self.xp =           0
         self.xp_max =       100
-        self.shoot_delay =  300                                                  # Ms between shoots
+        self.shoot_delay =  config["rate"] * 1000                               # Ms between shoots
         # Image data
         self.width =  (game.screen_size[0] * 0.1) // 1
         self.height = (self.width * 0.5) // 1
         self.bar_height = (self.height * 0.1) // 1
-        self.original_image = pygame.image.load(SPACESHIP1_NAME).convert_alpha()
+        self.original_image = pygame.image.load(config["img"]).convert_alpha()
         self.original_image = pygame.transform.scale(self.original_image, (self.width, self.height))
         self.image =    self.original_image
         self.mask =     pygame.mask.from_surface(self.image)
@@ -38,8 +39,8 @@ class Player(pygame.sprite.Sprite):
         self.last_hit_time = 0
         # Bullet data
         self.last_shot = 0
-        self.bullet_image = pygame.image.load(BULLET_NAME).convert_alpha()
-        self.rocket = PlasmaShooter(self)                                       # Example of bullet
+        self.bullet_image = pygame.image.load(bullet_config["img"]).convert_alpha()
+        self.rocket = PlasmaShooter(self, self.bullet_image, bullet_config)     # Example of bullet
         self.Bullets = pygame.sprite.Group()
         # Warning data
         self.warning_font = pygame.font.Font(FONT_NAME, 25)
@@ -99,7 +100,7 @@ class Player(pygame.sprite.Sprite):
 
     def level_up(self):
         self.xp -= self.xp_max
-        self.xp_max += 50
+        self.xp_max += 10
         self.health = self.health_max
         self.energy = self.energy_max
         self.rocket.damage += 5
@@ -134,6 +135,6 @@ class Player(pygame.sprite.Sprite):
         if now - self.last_shot > self.shoot_delay:
             if self.rocket.cost <= self.energy:                                 # If can shoot
                 self.game.sound_manager.play_sound("shoot")
-                self.Bullets.add(PlasmaShooter(self, self.bullet_image))
+                self.Bullets.add(PlasmaShooter(self, self.bullet_image, self.bullet_config))
                 self.energy -= self.rocket.cost
                 self.last_shot = now

@@ -1,7 +1,6 @@
 """                Game variables                 """
 
-# Game data
-game_name = 'Space Invader'
+# Folders
 filename_fonts = 'fonts'
 filename_images = 'img'
 filename_sounds = 'sounds'
@@ -11,7 +10,7 @@ SCREEN_WIDTH = 1240
 SCREEN_HEIGHT = 720
 banner_size = (SCREEN_WIDTH * 0.2, SCREEN_WIDTH * 0.2)
 play_button_size = (SCREEN_WIDTH * 0.1, SCREEN_WIDTH * 0.1)
-level_select_size = (SCREEN_WIDTH * 0.4, SCREEN_WIDTH * 0.2)
+level_select_size = (SCREEN_WIDTH * 0.2, SCREEN_WIDTH * 0.1)
 
 # Fonts
 FONT_NAME = f"{filename_fonts}/CutiveMono-Regular.ttf"
@@ -23,5 +22,31 @@ BANNER_NAME =       f'{filename_images}/ui/icon.png'
 PLAY_BUTTON_NAME =  f'{filename_images}/ui/play_button.png'
 LEVEL_SELECT_NAME = f'{filename_images}/ui/level_select.png'
 SPACESHIP1_NAME =   f'{filename_images}/spaceships/spaceship1.png'
-BULLET_NAME =       f"{filename_images}/bullets/rocket1.png"
+SPACESHIP2_NAME =   f'{filename_images}/spaceships/spaceship2.png'
+SPACESHIP3_NAME =   f'{filename_images}/spaceships/spaceship3.png'
+BULLET1_NAME =      f"{filename_images}/bullets/rocket1.png"
+BULLET2_NAME =      f"{filename_images}/bullets/rocket2.png"
+BULLET3_NAME =      f"{filename_images}/bullets/rocket3.png"
 ASTEROID1_NAME =    f'{filename_images}/comets/asteroids1.png'
+ASTEROID2_NAME =    f'{filename_images}/comets/asteroids2.png'
+ASTEROID3_NAME =    f'{filename_images}/comets/asteroids3.png'
+
+# Levels
+LEVELS_DATA = {
+    1: {
+        "player": {"img": SPACESHIP1_NAME, "speed": 5, "health": 200, "energy": 100, "regen": 0.2, "rate": 0.3},
+        "bullet": {"img": BULLET1_NAME, "speed": 15, "damage": 15, "cost": 10},
+        "belt": {"density": 30, "max_size": 30, "chaos": 0.25},
+        "asteroid": {"img": ASTEROID1_NAME, "speed_range": (1, 5), "hp_mult": (40, 60)},
+    }, 2: {
+        "player": {"img": SPACESHIP2_NAME, "speed": 8, "health": 250, "energy": 150, "regen": 0.4, "rate": 0.2},
+        "bullet": {"img": BULLET2_NAME, "speed": 20, "damage": 20, "cost": 15},
+        "belt": {"density": 40, "max_size": 40, "chaos": 0.4},
+        "asteroid": {"img": ASTEROID2_NAME, "speed_range": (1, 6), "hp_mult": (50, 70)},
+    }, 3: {
+        "player": {"img": SPACESHIP3_NAME, "speed": 10, "health": 300, "energy": 200, "regen": 0.6, "rate": 0.1},
+        "bullet": {"img": BULLET3_NAME, "speed": 5, "damage": 25, "cost": 20},
+        "belt": {"density": 50, "max_size": 50, "chaos": 0.55},
+        "asteroid": {"img": ASTEROID3_NAME, "speed_range": (1, 7), "hp_mult": (70, 100)},
+    },
+}
